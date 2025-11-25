@@ -61,7 +61,7 @@ st.session_state["all_locations"] = all_locations
 st.session_state["date_range"] = date_range
 # update header date badge
 date_range_placeholder.markdown(
-    f"<span style='background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;'>{st.session_state["date_range"]}</span>",
+    f'<span style="background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;">{st.session_state["date_range"]}</span>',
     unsafe_allow_html=True,
 )
 
