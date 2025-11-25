@@ -47,8 +47,9 @@ Dashboards include:
 ```
 Costco-Analyzer/
 │
-├── streamlit_app.py                      
-├── helper.py                        
+├── Streamlit Dashboard/
+│   ├── streamlit_app.py 
+│   ├── helper.py  
 │
 ├── manual_receipt_downloader.js
 │
