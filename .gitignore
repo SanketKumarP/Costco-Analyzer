@@ -9,7 +9,4 @@ env/
 venv/
 *.DS_Store
 
-# Uploaded JSON files
-*.json
-
 Streamlit Dashboard/archive/**
