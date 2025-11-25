@@ -23,7 +23,7 @@ Two ways to download your Costco receipts:
 Run dashboards in two ways:
 
 1. **Hosted cloud app**:  
-   Streamlit link 
+   https://costco.streamlit.app/
 2. **Local Streamlit app**:
    ```bash
    streamlit run streamlit_app.py
@@ -50,7 +50,7 @@ Costco-Analyzer/
 ├── streamlit_app.py                      
 ├── helper.py                        
 │
-├── helper.py 
+├── manual_receipt_downloader.js
 │
 ├── Receipt Downloader Extension/
 │   ├── popup.html
@@ -128,7 +128,7 @@ Upload your JSON file.
 ## Option 2 — **Run Locally**
 
 ```bash
-git clone https://github.com/
+git clone https://github.com/SanketKumarP/Costco-Analyzer
 cd costco-analyzer
 pip install -r requirements.txt
 streamlit run streamlit_app.py
