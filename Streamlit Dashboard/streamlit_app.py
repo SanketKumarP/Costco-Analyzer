@@ -4,14 +4,13 @@ from helper import process_receipts
 import helper
 import time
 
-helper.load_css()
 # ------------------------------------------------------------
 # Page config
 # ------------------------------------------------------------
 st.set_page_config(page_title="Costco Receipt Dashboard",
                    layout="wide",
                    initial_sidebar_state="expanded")
-
+helper.load_css()
 
 # ------------------------------------------------------------
 # Header + file uploader
