@@ -1,5 +1,6 @@
 from datetime import datetime
 from collections import defaultdict
+import streamlit as st
 
 
 
@@ -339,6 +340,12 @@ def process_receipts(receipts):
             date_range_str = f"{min_d.year} – {max_d.year}"
     else:
         date_range_str = "Waiting for file..."
+
+    # Store in session state for other pages
+    st.session_state["merch"] = merch
+    st.session_state["gas"] = gas
+    st.session_state["all_locations"] = all_locations
+    st.session_state["date_range"] = date_range_str
 
     return merch, gas, all_locations, date_range_str
 

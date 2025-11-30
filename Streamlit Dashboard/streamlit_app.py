@@ -4,14 +4,14 @@ from helper import process_receipts
 import helper
 import time
 
-
+helper.load_css()
 # ------------------------------------------------------------
 # Page config
 # ------------------------------------------------------------
 st.set_page_config(page_title="Costco Receipt Dashboard",
                    layout="wide",
                    initial_sidebar_state="expanded")
-helper.load_css()
+
 
 # ------------------------------------------------------------
 # Header + file uploader
@@ -55,10 +55,11 @@ with left:
         merch, gas, all_locations, date_range = process_receipts(all_receipts)
 
 # Store in session state for other pages
-st.session_state["merch"] = merch
-st.session_state["gas"] = gas
-st.session_state["all_locations"] = all_locations
-st.session_state["date_range"] = date_range
+# st.session_state["merch"] = merch
+# st.session_state["gas"] = gas
+# st.session_state["all_locations"] = all_locations
+# st.session_state["date_range"] = date_range
+
 # update header date badge
 date_range_placeholder.markdown(
     f'<span style="background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;">{st.session_state["date_range"]}</span>',
@@ -66,15 +67,191 @@ date_range_placeholder.markdown(
 )
 
 
-# st.success("Data loaded! Redirecting to Merchandise page in 10 seconds...")
-
-# time.sleep(10)
-# st.switch_page("pages/Merchandise.py")
-
 # Pages at the top — Excel style
-tabs = st.tabs(["📦 Merchandise", "⛽ Gas", "📈 Prices"])
+tabs = st.tabs(["KPIs","📦 Merchandise", "⛽ Gas", "📈 Prices"])
 
-with tabs[0]:
+with tabs[0]: # KPIs
+
+    # ------------------------------------------------------------
+    #Costco Summary KPIs
+    # ------------------------------------------------------------
+    st.markdown("<div class='section-header'> Costco </div>", unsafe_allow_html=True)
+
+    total_columns = st.columns(3)
+    with total_columns[0]:
+        st.markdown(
+            f"""
+            <div class="summary-card gas">
+            <div class="label">Total Spent</div>
+            <div class="value">{helper.format_money(merch['total_spent'] + gas['total_spent'])}</div>
+            <div class="sub">Merchandise + Gas</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with total_columns[2]:
+        st.markdown(
+            f"""
+            <div class="summary-card total-locations">
+            <div class="label">Total Unique Locations</div>
+            <div class="value">{len(all_locations)}</div>
+            <div class="sub">Gas + Warehouse</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    # Executive rewards
+    years = sorted(merch["subtotal_by_year"].keys(), reverse=True)
+    rewards_rows = []
+    total_rewards = 0.0
+    for y in years:
+        sub = merch["subtotal_by_year"][y]
+        rew = sub * 0.02
+        total_rewards += rew
+        rewards_rows.append({"Year": y, "Qualifying Spend": sub, "2% Cashback": rew})
+
+    with total_columns[1]:
+        st.markdown(
+            f"""
+            <div class="summary-card gold">
+            <div class="label" style="color:#b45309;">Est. Executive Reward</div>
+            <div class="value" style="color:#b45309;">{helper.format_money(total_rewards)}</div>
+            <div class="sub">2% of annual subtotals</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("<div class='section-header'>🛒 Warehouse Shopping</div>", unsafe_allow_html=True)
+
+    # ------------------------------------------------------------
+    #Merchandise KPIs
+    # ------------------------------------------------------------
+    summary_cols = st.columns(5)
+
+    with summary_cols[0]:
+        st.markdown(
+            f"""
+            <div class="summary-card gas">
+            <div class="label">Net Spent</div>
+            <div class="value">{helper.format_money(merch['total_spent'])}</div>
+            <div class="sub">(Purchases - refunds)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary_cols[2]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Total Items</div>
+            <div class="value">{helper.format_num(merch['total_units'],0)}</div>
+            <div class="sub">Unique items: {len(merch['item_stats'])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary_cols[1]:
+        avg_per_receipt = merch["total_spent"] / len(merch["receipts"]) if merch["receipts"] else 0
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Warehouse Trips</div>
+            <div class="value">{len(merch['receipts'])}</div>
+            <div class="sub">Avg {helper.format_money(avg_per_receipt)} / trip</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary_cols[3]:
+        st.markdown(
+            f"""
+            <div class="summary-card refund">
+            <div class="label" style="color:#7c3aed;">Total Refunds</div>
+            <div class="value" style="color:#7c3aed;">{helper.format_money(merch['refund_total'])}</div>
+            <div class="sub">Return counts: {merch['refund_count']}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with summary_cols[4]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Merch Locations</div>
+            <div class="value">{len(merch['locations'])}</div>
+            <div class="sub">Unique warehouses</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    
+    # ------------------------------------------------------------
+    #Gas KPIs
+    # ------------------------------------------------------------
+    st.markdown("<div class='section-header'>⛽ Gas</div>", unsafe_allow_html=True)
+
+    gas_cols = st.columns(5)
+
+    weighted_avg_price = (
+        gas["price_sum"] / gas["total_gallons"] if gas["total_gallons"] > 0 else 0.0
+    )
+
+    with gas_cols[0]:
+        st.markdown(
+            f"""
+            <div class="summary-card gas">
+            <div class="label">Total Gas Spent</div>
+            <div class="value">{helper.format_money(gas['total_spent'])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with gas_cols[1]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Total Gallons</div>
+            <div class="value">{helper.format_num(gas['total_gallons'],1)} gal</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with gas_cols[2]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Avg Price / Gal</div>
+            <div class="value">{helper.format_money(weighted_avg_price)}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with gas_cols[3]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Gas Trips</div>
+            <div class="value">{gas['count']}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with gas_cols[4]:
+        st.markdown(
+            f"""
+            <div class="summary-card">
+            <div class="label">Unique Gas Locations</div>
+            <div class="value">{len(gas['locations'])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+with tabs[1]: # Merchandise
     import streamlit as st
     import pandas as pd
     import helper
@@ -105,7 +282,7 @@ with tabs[0]:
     with summary_cols[0]:
         st.markdown(
             f"""
-            <div class="summary-card">
+            <div class="summary-card gas">
             <div class="label">Net Spent (Merch)</div>
             <div class="value">{helper.format_money(merch['total_spent'])}</div>
             <div class="sub">Purchases - refunds</div>
@@ -114,7 +291,7 @@ with tabs[0]:
             unsafe_allow_html=True,
         )
 
-    with summary_cols[1]:
+    with summary_cols[2]:
         st.markdown(
             f"""
             <div class="summary-card">
@@ -126,7 +303,7 @@ with tabs[0]:
             unsafe_allow_html=True,
         )
 
-    with summary_cols[2]:
+    with summary_cols[1]:
         avg_per_receipt = merch["total_spent"] / len(merch["receipts"]) if merch["receipts"] else 0
         st.markdown(
             f"""
@@ -373,20 +550,7 @@ with tabs[0]:
         else:
             st.info("No monthly merchandise data.")
 
-    # Combined locations
-    st.markdown("")
-    st.markdown(
-        f"""
-        <div class="summary-card" style="max-width:280px; margin-top:0.6rem;">
-        <div class="label">Total Unique Locations</div>
-        <div class="value">{len(all_locations)}</div>
-        <div class="sub">Gas + merchandise combined</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with tabs[1]:
+with tabs[2]: # Gas
     import streamlit as st
     import pandas as pd
     import helper
@@ -442,7 +606,6 @@ with tabs[1]:
             <div class="summary-card">
             <div class="label">Avg Price / Gal</div>
             <div class="value">{helper.format_money(weighted_avg_price)}</div>
-            <div class="sub">Weighted average</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -578,7 +741,7 @@ with tabs[1]:
 
     st.divider()
 
-with tabs[2]:
+with tabs[3]: # Prices
     import streamlit as st
     import pandas as pd
     import helper
@@ -598,88 +761,7 @@ with tabs[2]:
     # ------------------------------------------------------------
     # Searchable Item Lookup
     # ------------------------------------------------------------
-    st.markdown("<div class='section-header'>📈 Price Trends & Item Lookup", unsafe_allow_html=True)
-    item_values = list(merch["item_stats"].values())
-    def df_price_increase():
-        rows = []
-        for s in item_values:
-            if s["last_price"] > s["first_price"]:
-                diff = s["last_price"] - s["first_price"]
-                rows.append(
-                    {
-                        "Item": s["name"],
-                        "Item #": s["itemNumber"],
-                        "Old → New": f"{helper.format_money(s['first_price'])} → {helper.format_money(s['last_price'])}",
-                        "Diff (num)": diff,   # numeric
-                    }
-                )
-
-        # If no rows → return empty table with correct columns
-        if not rows:
-            return pd.DataFrame(columns=["Item", "Item #", "Old → New", "Diff"])
-
-        # Build DataFrame and sort N U M E R I C A L L Y
-        df = pd.DataFrame(rows).sort_values(
-            by="Diff (num)", ascending=False
-        ).head(50)
-
-        # Human-friendly column
-        df["Diff"] = df["Diff (num)"].map(helper.format_money)
-
-        return df[["Item", "Item #", "Old → New", "Diff"]]
-
-
-    def df_price_decrease():
-        rows = []
-        for s in item_values:
-            if s["last_price"] < s["first_price"]:
-                diff = s["last_price"] - s["first_price"]
-                rows.append(
-                    {
-                        "Item": s["name"],
-                        "Item #": s["itemNumber"],
-                        "Old → New": f"{helper.format_money(s['first_price'])} → {helper.format_money(s['last_price'])}",
-                        "Diff (num)": diff,   # numeric
-                    }
-                )
-
-        # If no rows → return an empty table with correct columns
-        if not rows:
-            return pd.DataFrame(columns=["Item", "Item #", "Old → New", "Diff"])
-
-        # Build DataFrame and sort N U M E R I C A L L Y
-        df = pd.DataFrame(rows).sort_values(
-            by="Diff (num)",
-            ascending=True   # lower first
-        ).head(50)
-
-        # Human-readable formatted column
-        df["Diff"] = df["Diff (num)"].map(helper.format_money)
-
-        return df[["Item", "Item #", "Old → New", "Diff"]]
-
-
-    
-
-    bottom_row_left, bottom_row_right = st.columns(2)
-
-    with bottom_row_left:
-        st.subheader("📈 Price Increases")
-        df_inc = df_price_increase()
-        if not df_inc.empty:
-            st.dataframe(df_inc, hide_index=True, use_container_width=True)
-        else:
-            st.info("No items with price increases.")
-        
-
-    with bottom_row_right:
-        st.subheader("📉 Price Drops")
-        df_dec = df_price_decrease()
-        if not df_dec.empty:
-            st.dataframe(df_dec, hide_index=True, use_container_width=True)
-        else:
-            st.info("No items with price decreases.")
-        
+         
     st.markdown("<div class='section-header'>🔍 Item Lookup</div>", unsafe_allow_html=True)
 
     if merch["item_stats"]:
@@ -785,3 +867,86 @@ with tabs[2]:
     else:
         st.info("No merchandise items to search.")
 
+
+    st.markdown("<div class='section-header'>Price Trends", unsafe_allow_html=True)
+    item_values = list(merch["item_stats"].values())
+    def df_price_increase():
+        rows = []
+        for s in item_values:
+            if s["last_price"] > s["first_price"]:
+                diff = s["last_price"] - s["first_price"]
+                rows.append(
+                    {
+                        "Item": s["name"],
+                        "Item #": s["itemNumber"],
+                        "Old → New": f"{helper.format_money(s['first_price'])} → {helper.format_money(s['last_price'])}",
+                        "Diff (num)": diff,   # numeric
+                    }
+                )
+
+        # If no rows → return empty table with correct columns
+        if not rows:
+            return pd.DataFrame(columns=["Item", "Item #", "Old → New", "Diff"])
+
+        # Build DataFrame and sort N U M E R I C A L L Y
+        df = pd.DataFrame(rows).sort_values(
+            by="Diff (num)", ascending=False
+        ).head(50)
+
+        # Human-friendly column
+        df["Diff"] = df["Diff (num)"].map(helper.format_money)
+
+        return df[["Item", "Item #", "Old → New", "Diff"]]
+
+
+    def df_price_decrease():
+        rows = []
+        for s in item_values:
+            if s["last_price"] < s["first_price"]:
+                diff = s["last_price"] - s["first_price"]
+                rows.append(
+                    {
+                        "Item": s["name"],
+                        "Item #": s["itemNumber"],
+                        "Old → New": f"{helper.format_money(s['first_price'])} → {helper.format_money(s['last_price'])}",
+                        "Diff (num)": diff,   # numeric
+                    }
+                )
+
+        # If no rows → return an empty table with correct columns
+        if not rows:
+            return pd.DataFrame(columns=["Item", "Item #", "Old → New", "Diff"])
+
+        # Build DataFrame and sort N U M E R I C A L L Y
+        df = pd.DataFrame(rows).sort_values(
+            by="Diff (num)",
+            ascending=True   # lower first
+        ).head(50)
+
+        # Human-readable formatted column
+        df["Diff"] = df["Diff (num)"].map(helper.format_money)
+
+        return df[["Item", "Item #", "Old → New", "Diff"]]
+
+
+    
+
+    bottom_row_left, bottom_row_right = st.columns(2)
+
+    with bottom_row_left:
+        st.subheader("📈 Price Increases")
+        df_inc = df_price_increase()
+        if not df_inc.empty:
+            st.dataframe(df_inc, hide_index=True, use_container_width=True)
+        else:
+            st.info("No items with price increases.")
+        
+
+    with bottom_row_right:
+        st.subheader("📉 Price Drops")
+        df_dec = df_price_decrease()
+        if not df_dec.empty:
+            st.dataframe(df_dec, hide_index=True, use_container_width=True)
+        else:
+            st.info("No items with price decreases.")
+   
