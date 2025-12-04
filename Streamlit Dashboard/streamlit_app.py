@@ -495,19 +495,19 @@ with tabs[1]: # Merchandise
         st.subheader("💎 Most Expensive")
         df_exp = df_most_expensive()
         if not df_exp.empty:
-            st.table(df_exp, hide_index=True, use_container_width=True)
+            st.dataframe(df_exp, hide_index=True, use_container_width=True)
         else:
             st.info("Not enough price history.")
 
     with top_row_mid:
         st.subheader("💰 Most Total Spent")
         df_spent = df_most_total_spent()
-        st.table(df_spent, hide_index=True, use_container_width=True)
+        st.dataframe(df_spent, hide_index=True, use_container_width=True)
         
     with top_row_right:
         st.subheader("🔥 Most Frequently Bought")
         df_freq = df_most_purchased()
-        st.table(df_freq, hide_index=True, use_container_width=True)
+        st.dataframe(df_freq, hide_index=True, use_container_width=True)
 
     # ------------------------------------------------------------
     # Merch: Rewards table + monthly trend
