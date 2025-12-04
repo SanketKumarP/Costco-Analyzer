@@ -367,6 +367,7 @@ with tabs[1]: # Merchandise
 
     item_values = list(merch["item_stats"].values())
 
+    @st.cache_data
     def df_most_expensive():
         rows = []
         for s in item_values:
@@ -398,6 +399,7 @@ with tabs[1]: # Merchandise
 
         return df[["Item", "Item #", "Max Price", "Avg Price"]]
 
+    @st.cache_data
     def df_most_total_spent():
         rows = []
         for s in item_values:
@@ -437,6 +439,7 @@ with tabs[1]: # Merchandise
 
         return df[["#", "Item", "Item #", "Total", "Units", "Avg Price"]]
 
+    @st.cache_data
     def df_most_purchased():
         rows = []
         for s in item_values:
@@ -492,19 +495,19 @@ with tabs[1]: # Merchandise
         st.subheader("💎 Most Expensive")
         df_exp = df_most_expensive()
         if not df_exp.empty:
-            st.dataframe(df_exp, hide_index=True, use_container_width=True)
+            st.table(df_exp, hide_index=True, use_container_width=True)
         else:
             st.info("Not enough price history.")
 
     with top_row_mid:
         st.subheader("💰 Most Total Spent")
         df_spent = df_most_total_spent()
-        st.dataframe(df_spent, hide_index=True, use_container_width=True)
+        st.table(df_spent, hide_index=True, use_container_width=True)
         
     with top_row_right:
         st.subheader("🔥 Most Frequently Bought")
         df_freq = df_most_purchased()
-        st.dataframe(df_freq, hide_index=True, use_container_width=True)
+        st.table(df_freq, hide_index=True, use_container_width=True)
 
     # ------------------------------------------------------------
     # Merch: Rewards table + monthly trend
