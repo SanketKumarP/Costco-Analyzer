@@ -20,7 +20,8 @@ def load_css():
     --gas-soft: #fee2e2;
     --gold: #d97706;
     --gold-soft: #fef3c7;
-    --refund-accent: #7c3aed;
+    --refund-accent: #dc2626;
+    --savings-accent: #047857;
     --refund-soft: #f3e8ff;
     --text-main: #111827;
     --text-muted: #6b7280;
@@ -55,6 +56,7 @@ def load_css():
     .summary-card.gold { border-left: 4px solid var(--gold); }
     .summary-card.gas { border-left: 4px solid var(--gas-accent); }
     .summary-card.refund { border-left: 4px solid var(--refund-accent); }
+    .summary-card.savings { border-left: 4px solid var(--savings-accent); }
 
     .summary-card .label {
     font-size: 0.75rem;
@@ -206,6 +208,7 @@ def process_receipts(receipts):
         "refund_count": 0,
         "refund_total": 0.0,
         "locations": set(),
+        "Total Savings": 0.0,
     }
 
     gas = {
@@ -243,6 +246,7 @@ def process_receipts(receipts):
         total = float(rec.get("total") or 0.0)
         loc_name = (rec.get("warehouseName") or "Unknown").strip()
         all_locations.add(loc_name)
+        total_savings = float(rec.get("instantSavings") or 0.0)
 
         item_array = rec.get("itemArray") or []
 
@@ -280,6 +284,7 @@ def process_receipts(receipts):
             merch["locations"].add(loc_name)
             merch["total_spent"] += total
             merch["monthly"][month_key]["spent"] += total
+            merch["Total Savings"] += total_savings
 
             # refunds
             if total < 0 or rec.get("transactionType") == "Refund":

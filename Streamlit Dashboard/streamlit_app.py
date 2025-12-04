@@ -15,9 +15,12 @@ helper.load_css()
 # ------------------------------------------------------------
 # Header + file uploader
 # ------------------------------------------------------------
-right,left=st.columns([4,1.5])
+right,middle,left=st.columns([3,4,3])
+with middle:
+    st.title("Costco Dashboard")
 with right:
-    st.title("🧾 Costco Spend Analysis")
+    st.image("Streamlit Dashboard/costco.png", width=120)
+    
 
     date_range_placeholder = st.markdown(
             "<span style='background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;'>Waiting for file...</span>",
@@ -53,21 +56,17 @@ with left:
     with st.spinner("Processing receipts..."):
         merch, gas, all_locations, date_range = process_receipts(all_receipts)
 
-# Store in session state for other pages
-# st.session_state["merch"] = merch
-# st.session_state["gas"] = gas
-# st.session_state["all_locations"] = all_locations
-# st.session_state["date_range"] = date_range
-
 # update header date badge
 date_range_placeholder.markdown(
-    f'<span style="background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;">{st.session_state["date_range"]}</span>',
+    f'<span style="background:#e5e7eb; padding:2px 10px; border-radius:12px; font-size:0.85rem;">'
+    f'Date Range: {st.session_state["date_range"]}'
+    f'</span>',
     unsafe_allow_html=True,
 )
 
 
 # Pages at the top — Excel style
-tabs = st.tabs(["KPIs","📦 Merchandise", "⛽ Gas", "📈 Prices"])
+tabs = st.tabs(["📊 KPIs","📦 Merchandise", "⛽ Gas", "📈 Prices"])
 
 with tabs[0]: # KPIs
 
@@ -76,7 +75,7 @@ with tabs[0]: # KPIs
     # ------------------------------------------------------------
     st.markdown("<div class='section-header'> Costco </div>", unsafe_allow_html=True)
 
-    total_columns = st.columns(3)
+    total_columns = st.columns(4)
     with total_columns[0]:
         st.markdown(
             f"""
@@ -88,13 +87,24 @@ with tabs[0]: # KPIs
             """,
             unsafe_allow_html=True,
         )
-    with total_columns[2]:
+    with total_columns[3]:
         st.markdown(
             f"""
             <div class="summary-card total-locations">
             <div class="label">Total Unique Locations</div>
             <div class="value">{len(all_locations)}</div>
             <div class="sub">Gas + Warehouse</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with total_columns[2]:
+        st.markdown(
+            f"""
+            <div class="summary-card savings">
+            <div class="label">Total Savings</div>
+            <div class="value">{helper.format_money(merch['Total Savings'])}</div>
+            <div class="sub">Costco/Manufacturer's discount</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -168,8 +178,8 @@ with tabs[0]: # KPIs
         st.markdown(
             f"""
             <div class="summary-card refund">
-            <div class="label" style="color:#7c3aed;">Total Refunds</div>
-            <div class="value" style="color:#7c3aed;">{helper.format_money(merch['refund_total'])}</div>
+            <div class="label">Total Refunds</div>
+            <div class="value">{helper.format_money(merch['refund_total'])}</div>
             <div class="sub">Return counts: {merch['refund_count']}</div>
             </div>
             """,
@@ -282,9 +292,9 @@ with tabs[1]: # Merchandise
         st.markdown(
             f"""
             <div class="summary-card gas">
-            <div class="label">Net Spent (Merch)</div>
+            <div class="label">Net Spent</div>
             <div class="value">{helper.format_money(merch['total_spent'])}</div>
-            <div class="sub">Purchases - refunds</div>
+            <div class="sub">(Purchases - refunds)</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -294,9 +304,9 @@ with tabs[1]: # Merchandise
         st.markdown(
             f"""
             <div class="summary-card">
-            <div class="label">Net Items</div>
+            <div class="label">Total Items</div>
             <div class="value">{helper.format_num(merch['total_units'],0)}</div>
-            <div class="sub">Unique codes: {len(merch['item_stats'])}</div>
+            <div class="sub">Unique items: {len(merch['item_stats'])}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -307,7 +317,7 @@ with tabs[1]: # Merchandise
         st.markdown(
             f"""
             <div class="summary-card">
-            <div class="label">Merch Visits</div>
+            <div class="label">Warehouse Trips</div>
             <div class="value">{len(merch['receipts'])}</div>
             <div class="sub">Avg {helper.format_money(avg_per_receipt)} / trip</div>
             </div>
@@ -319,8 +329,8 @@ with tabs[1]: # Merchandise
         st.markdown(
             f"""
             <div class="summary-card refund">
-            <div class="label" style="color:#7c3aed;">Total Refunded</div>
-            <div class="value" style="color:#7c3aed;">{helper.format_money(merch['refund_total'])}</div>
+            <div class="label">Total Refunds</div>
+            <div class="value">{helper.format_money(merch['refund_total'])}</div>
             <div class="sub">Returns count: {merch['refund_count']}</div>
             </div>
             """,
@@ -351,6 +361,32 @@ with tabs[1]: # Merchandise
     with summary_cols[5]:
         st.markdown(
             f"""
+            <div class="summary-card savings">
+            <div class="label">Total Savings</div>
+            <div class="value">{helper.format_money(merch['Total Savings'])}</div>
+            <div class="sub">Costco/Manufacturer's discount</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("------------")
+
+        # ------------------------------------------------------------
+    # Merch: Rewards table + monthly trend
+    # ------------------------------------------------------------
+    left_merch, right_merch = st.columns(2)
+
+    with left_merch:
+        st.subheader("🏆 2% Reward Tracker")
+        if rewards_rows:
+            rewards_df = pd.DataFrame(rewards_rows)
+            rewards_df["Qualifying Spend"] = rewards_df["Qualifying Spend"].map(helper.format_money)
+            rewards_df["2% Cashback"] = rewards_df["2% Cashback"].map(helper.format_money)
+            st.dataframe(rewards_df, hide_index=True, use_container_width=True)
+
+            st.markdown(
+            f"""
             <div class="summary-card gold">
             <div class="label" style="color:#b45309;">Est. Executive Reward</div>
             <div class="value" style="color:#b45309;">{helper.format_money(total_rewards)}</div>
@@ -359,8 +395,39 @@ with tabs[1]: # Merchandise
             """,
             unsafe_allow_html=True,
         )
+        else:
+            st.info("No subtotal data available for rewards.")
 
-    st.markdown("")
+    with right_merch:
+        st.subheader("📊 Merchandise Spending Trend")
+        if merch["monthly"]:
+            merch_month_df = (
+                pd.DataFrame(
+                    [
+                        {"month_key": k, "month": helper.month_label_from_key(k), "total": v["spent"]}
+                        for k, v in merch["monthly"].items()
+                    ]
+                )
+                .sort_values("month_key")
+            )
+
+            import altair as alt
+
+            chart = (
+                alt.Chart(merch_month_df)
+                .mark_bar()
+                .encode(
+                    x=alt.X("month:N", title="Month", sort=None),
+                    y=alt.Y("total:Q", title="Amount Spent ($)"),
+                    tooltip=["month", "total"],
+                )
+            )
+            st.altair_chart(chart, use_container_width=True)
+        else:
+            st.info("No monthly merchandise data.")
+
+    st.markdown("------------")
+
     # ------------------------------------------------------------
     # Merch item tables
     # ------------------------------------------------------------
@@ -424,7 +491,7 @@ with tabs[1]: # Merchandise
         # No items → return empty frame with proper columns
         if not rows:
             return pd.DataFrame(
-                columns=["#", "Item", "Item #", "Total", "Units", "Avg Price"]
+                columns=["Item", "Item #", "Total", "Units", "Avg Price"]
             )
 
         # Sort numerically (not formatted)
@@ -437,7 +504,7 @@ with tabs[1]: # Merchandise
         df["Total"] = df["Total (num)"].map(helper.format_money)
         df["Avg Price"] = df["Avg Price (num)"].map(helper.format_money)
 
-        return df[["#", "Item", "Item #", "Total", "Units", "Avg Price"]]
+        return df[["Item", "Item #", "Total", "Units", "Avg Price"]]
 
     @st.cache_data
     def df_most_purchased():
@@ -469,7 +536,7 @@ with tabs[1]: # Merchandise
         # If no rows → return an empty DataFrame with correct columns
         if not rows:
             return pd.DataFrame(
-                columns=["#", "Item", "Item #", "Units", "Avg Price", "Change"]
+                columns=["Item", "Item #", "Units", "Avg Price", "Change"]
             )
 
         # Sort by numeric units
@@ -487,7 +554,7 @@ with tabs[1]: # Merchandise
             lambda v: f"+{helper.format_money(v)}" if v > 0.01 else "-"
         )
 
-        return df[["#", "Item", "Item #", "Units", "Avg Price", "Change"]]
+        return df[["Item", "Item #", "Units", "Avg Price", "Change"]]
 
     top_row_left, top_row_mid, top_row_right = st.columns(3)
 
@@ -509,48 +576,6 @@ with tabs[1]: # Merchandise
         df_freq = df_most_purchased()
         st.dataframe(df_freq, hide_index=True, use_container_width=True)
 
-    # ------------------------------------------------------------
-    # Merch: Rewards table + monthly trend
-    # ------------------------------------------------------------
-    left_merch, right_merch = st.columns(2)
-
-    with left_merch:
-        st.subheader("🏆 2% Reward Tracker")
-        if rewards_rows:
-            rewards_df = pd.DataFrame(rewards_rows)
-            rewards_df["Qualifying Spend"] = rewards_df["Qualifying Spend"].map(helper.format_money)
-            rewards_df["2% Cashback"] = rewards_df["2% Cashback"].map(helper.format_money)
-            st.dataframe(rewards_df, hide_index=True, use_container_width=True)
-        else:
-            st.info("No subtotal data available for rewards.")
-
-    with right_merch:
-        st.subheader("📊 Merchandise Spending Trend")
-        if merch["monthly"]:
-            merch_month_df = (
-                pd.DataFrame(
-                    [
-                        {"month_key": k, "month": helper.month_label_from_key(k), "total": v["spent"]}
-                        for k, v in merch["monthly"].items()
-                    ]
-                )
-                .sort_values("month_key")
-            )
-
-            import altair as alt
-
-            chart = (
-                alt.Chart(merch_month_df)
-                .mark_bar()
-                .encode(
-                    x=alt.X("month:N", title="Month", sort=None),
-                    y=alt.Y("total:Q", title="Amount Spent ($)"),
-                    tooltip=["month", "total"],
-                )
-            )
-            st.altair_chart(chart, use_container_width=True)
-        else:
-            st.info("No monthly merchandise data.")
 
 with tabs[2]: # Gas
     import streamlit as st
@@ -777,23 +802,10 @@ with tabs[3]: # Prices
             key = item_label_to_key[choice]
             stat = merch["item_stats"][key]
 
-            st.markdown(f"### 🛒 {stat['name']}  (#{stat['itemNumber']})")
-
-            #with summary_cols[0]:
-            # st.markdown(
-            #     f"""
-            #     <div class="summary-card">
-            #     <div class="label">Times Bought</div>
-            #     <div class="value">{stat["purchases"]}</div>
-            #     /<div class="sub"></div>
-            #     </div>
-            #     """,
-            #     unsafe_allow_html=True,
-            # )
+            st.markdown(f"#### 🛒 {stat['name']}  (#{stat['itemNumber']})")
 
             m1, m2, m3, m4 = st.columns(4)
             with m1:
-                #st.metric("Times Bought", stat["purchases"])
                 st.markdown(
                     f"""
                     <div class="summary-card">
@@ -805,19 +817,17 @@ with tabs[3]: # Prices
                 )
                 
             with m2:
-                #st.metric("Total Spent", helper.format_money(stat["total_spent"]))
                 st.markdown(
                     f"""
                     <div class="summary-card">
                     <div class="label">Total Spent</div>
-                    <div class="value">{stat["total_spent"]}</div>
+                    <div class="value">{round(stat["total_spent"],2)}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
             with m3:
                 avg_price = stat["total_spent"] / stat["total_units"]
-                #st.metric("Avg Price", helper.format_money(avg_price))
                 st.markdown(
                     f"""
                     <div class="summary-card">
@@ -828,10 +838,6 @@ with tabs[3]: # Prices
                     unsafe_allow_html=True,
                 )
             with m4:
-                # st.metric(
-                #     "Min → Max Price",
-                #     f"{helper.format_money(stat['min_price'])} → {helper.format_money(stat['max_price'])}",
-                # )
                 st.markdown(
                     f"""
                     <div class="summary-card">
@@ -848,26 +854,33 @@ with tabs[3]: # Prices
             hist_df["date"] = hist_df["date"].dt.date
 
             st.markdown("#### 🗂️ Price History")
-            st.dataframe(hist_df.rename(columns={"date": "Purchase Date", "price": "Price"}),
-                        hide_index=True,
-                        use_container_width=True)
 
-            if not hist_df.empty:
-                import altair as alt
+            # Tabs: Graph & Table for Price History
+            tab_graph, tab_table = st.tabs(["📈 Graph", "📋 Table"])
+            with tab_graph:
+                if not hist_df.empty:
+                    import altair as alt
 
-                chart = (
-                    alt.Chart(hist_df)
-                    .mark_line(point=True)
-                    .encode(
-                        x=alt.X("date:T", title="Date"),
-                        y=alt.Y("price:Q", title="Price ($)"),
-                        tooltip=["date", "price"],
+                    chart = (
+                        alt.Chart(hist_df)
+                        .mark_line(point=True)
+                        .encode(
+                            x=alt.X("date:T", title="Date"),
+                            y=alt.Y("price:Q", title="Price ($)"),
+                            tooltip=["date", "price"],
+                        )
                     )
-                )
-                st.markdown("#### 📈 Price Trend Over Time")
-                st.altair_chart(chart, use_container_width=True)
-    else:
-        st.info("No merchandise items to search.")
+
+                    st.altair_chart(chart, use_container_width=True)
+                else:
+                    st.info("No price history available to display.")
+
+            with tab_table:
+                st.dataframe(hist_df.rename(columns={"date": "Purchase Date", "price": "Price"}),
+                            hide_index=True,
+                            use_container_width=True)
+
+
 
 
     st.markdown("<div class='section-header'>Price Trends", unsafe_allow_html=True)
