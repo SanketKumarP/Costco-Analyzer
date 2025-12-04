@@ -19,7 +19,7 @@ right,middle,left=st.columns([3,4,3])
 with middle:
     st.title("Costco Dashboard")
 with right:
-    st.image("Streamlit Dashboard/costco.png", width=120)
+    st.image("assets/Costco.png", width=120)
     
 
     date_range_placeholder = st.markdown(
