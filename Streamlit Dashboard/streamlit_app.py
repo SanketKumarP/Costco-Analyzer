@@ -66,7 +66,7 @@ date_range_placeholder.markdown(
 
 
 # Pages at the top — Excel style
-tabs = st.tabs(["📊 KPIs","📦 Merchandise", "⛽ Gas", "📈 Prices"])
+tabs = st.tabs(["📊 KPIs","📦 Warehouse", "⛽ Gas", "📈 Prices"])
 
 with tabs[0]: # KPIs
 
@@ -377,14 +377,9 @@ with tabs[1]: # Merchandise
     # ------------------------------------------------------------
     left_merch, right_merch = st.columns(2)
 
-    with left_merch:
-        st.subheader("🏆 2% Reward Tracker")
+    with right_merch:
+        st.subheader("🏆 Rewards")
         if rewards_rows:
-            rewards_df = pd.DataFrame(rewards_rows)
-            rewards_df["Qualifying Spend"] = rewards_df["Qualifying Spend"].map(helper.format_money)
-            rewards_df["2% Cashback"] = rewards_df["2% Cashback"].map(helper.format_money)
-            st.dataframe(rewards_df, hide_index=True, use_container_width=True)
-
             st.markdown(
             f"""
             <div class="summary-card gold">
@@ -395,11 +390,15 @@ with tabs[1]: # Merchandise
             """,
             unsafe_allow_html=True,
         )
+            rewards_df = pd.DataFrame(rewards_rows)
+            rewards_df["Qualifying Spend"] = rewards_df["Qualifying Spend"].map(helper.format_money)
+            rewards_df["2% Cashback"] = rewards_df["2% Cashback"].map(helper.format_money)
+            st.dataframe(rewards_df, hide_index=True, use_container_width=True)
         else:
             st.info("No subtotal data available for rewards.")
 
-    with right_merch:
-        st.subheader("📊 Merchandise Spending Trend")
+    with left_merch:
+        st.subheader("📊 Trend")
         if merch["monthly"]:
             merch_month_df = (
                 pd.DataFrame(
