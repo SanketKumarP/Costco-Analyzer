@@ -562,9 +562,9 @@ with tabs[1]: # Merchandise
             lambda v: f"+{helper.format_money(v)}" if v > 0.01 else "-"
         )
 
-        return df[["Item", "Item #", "Units", "Avg Price", "Change"]]
+        return df[["Item", "Item #", "Units", "Avg Price"]]
 
-    top_row_left, top_row_mid, top_row_right = st.columns(3)
+    top_row_left, top_row_mid, top_row_right = st.columns([4,4,3])
 
     with top_row_left:
         st.subheader("💎 Most Expensive")
