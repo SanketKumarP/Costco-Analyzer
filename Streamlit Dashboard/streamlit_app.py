@@ -437,10 +437,11 @@ with tabs[1]: # Merchandise
     # Merch item tables
     # ------------------------------------------------------------
 
-    item_values = list(merch["item_stats"].values())
+    
 
     @st.cache_data
     def df_most_expensive():
+        item_values = tuple(merch["item_stats"].values())
         rows = []
         for s in item_values:
             if s["max_price"] <= 0:
@@ -473,6 +474,7 @@ with tabs[1]: # Merchandise
 
     @st.cache_data
     def df_most_total_spent():
+        item_values = tuple(merch["item_stats"].values())
         rows = []
         for s in item_values:
             total_spent = s["total_spent"]
@@ -513,6 +515,7 @@ with tabs[1]: # Merchandise
 
     @st.cache_data
     def df_most_purchased():
+        item_values = tuple(merch["item_stats"].values())
         rows = []
         for s in item_values:
 
