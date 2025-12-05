@@ -10,6 +10,12 @@ import time
 st.set_page_config(page_title="Costco Receipt Dashboard",
                    layout="wide",
                    initial_sidebar_state="expanded")
+st.markdown("""
+    <style>
+    /* Fix top cut-off issue on Streamlit Cloud */
+    header { padding-top: 2rem !important; }
+    </style>
+    """, unsafe_allow_html=True)
 helper.load_css()
 
 # ------------------------------------------------------------
